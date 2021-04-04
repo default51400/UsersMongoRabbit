@@ -1,8 +1,12 @@
-﻿namespace BLL.Models
+﻿using System.Text.Json.Serialization;
+
+namespace BLL.Models
 {
     public class UserSecrets
     {
-        public string Login { get; set; }
+        [JsonPropertyName("username")]
+        public string Username { get; set; }
+        [JsonPropertyName("password")]
         public string Password { get; set; }
     }
 }
