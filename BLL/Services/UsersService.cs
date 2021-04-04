@@ -51,7 +51,7 @@ namespace BLL.Services
                 string json = JsonSerializer.Serialize(user);
                 sender = new Sender(configuration);
                 var response = sender.Call(json);
-                user = JsonSerializer.Deserialize<User>(response);
+                //user = JsonSerializer.Deserialize<User>(response);
             }
             catch (Exception ex)
             {

@@ -5,9 +5,11 @@ VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UsersMongoRabbit", "UsersMongoRabbit\UsersMongoRabbit.csproj", "{7345A388-7C8C-4EB0-A06E-D9E4E0E4D46A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLL", "BLL\BLL.csproj", "{48E0C650-0C4A-4182-B0AE-04F9C8EC8D49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BLL", "BLL\BLL.csproj", "{48E0C650-0C4A-4182-B0AE-04F9C8EC8D49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL", "DAL\DAL.csproj", "{59195940-7446-4389-AF47-FE07F58097D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DAL", "DAL\DAL.csproj", "{59195940-7446-4389-AF47-FE07F58097D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleConsumer", "ConsoleConsumer\ConsoleConsumer.csproj", "{0ADFFA2D-760C-42E7-92B5-B997BEEB51F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{59195940-7446-4389-AF47-FE07F58097D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59195940-7446-4389-AF47-FE07F58097D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59195940-7446-4389-AF47-FE07F58097D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ADFFA2D-760C-42E7-92B5-B997BEEB51F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ADFFA2D-760C-42E7-92B5-B997BEEB51F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ADFFA2D-760C-42E7-92B5-B997BEEB51F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ADFFA2D-760C-42E7-92B5-B997BEEB51F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

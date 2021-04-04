@@ -1,6 +1,5 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using DAL.Contexts;
 using DAL.Models;
@@ -24,6 +23,5 @@ namespace DAL.Repositories
             user.CreatedDate = DateTime.UtcNow.AddHours(2);
             await _context.Users.InsertOneAsync(user);
         }
-
     }
 }

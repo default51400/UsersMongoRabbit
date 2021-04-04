@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
@@ -55,7 +54,7 @@ namespace BLL.Infrastructure.RabbitMq
                 queue: replyQueueName,
                 autoAck: true);
 
-            return respQueue.Take();
+            return "Ok";//respQueue.Take();
         }
 
         public void Close()
