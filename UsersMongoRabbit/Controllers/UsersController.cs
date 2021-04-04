@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BLL.Models;
 using BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace UserMongoRabbit.Controllers
 {
@@ -11,11 +14,14 @@ namespace UserMongoRabbit.Controllers
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
+
+        private readonly ILogger<UsersController> log;
         private readonly IUsersService usersService;
 
-        public UsersController(IUsersService usersService)
+        public UsersController(IUsersService usersService, ILogger<UsersController> logger)
         {
             this.usersService = usersService;
+            this.log = logger;
         }
 
         [HttpGet]
@@ -23,6 +29,7 @@ namespace UserMongoRabbit.Controllers
         {
             try
             {
+                log.LogInformation("Called GetAll");
                 var users = await usersService.GetAll();
                 var resp = new GenericResponse<IEnumerable<UserDto>>()
                     .Success($"Success", users);
@@ -31,7 +38,7 @@ namespace UserMongoRabbit.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                log.LogError($"Exception: {ex.Message}");
                 return new GenericResponse<IEnumerable<UserDto>>()
                     .Error($"Unhandled error: {ex.Message}", null); ;
             }
@@ -42,11 +49,15 @@ namespace UserMongoRabbit.Controllers
         {
             try
             {
+                log.LogInformation($"Called Post user: {JsonSerializer.Serialize(user)}");
+
                 await usersService.Create(user);
+
+                log.LogInformation($"Success created user: {JsonSerializer.Serialize(user)}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                log.LogError($"Exception: {ex.Message}");
             }
         }
     }
