@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BLL.Infrastructure.RabbitMq;
 using BLL.Services;
 using BLL.Services.Interfaces;
 using DAL.Repositories;
@@ -15,6 +16,9 @@ namespace BLL.Infrastructure.Extensions
         {
             services.AddTransient<IUsersRepository, UsersRepository>();
             services.AddTransient<IUsersService, UsersService>();
+
+
+            services.AddHostedService<ReceiverService>();
         }
     }
 }
