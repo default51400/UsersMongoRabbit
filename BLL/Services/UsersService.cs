@@ -10,21 +10,22 @@ using DAL.Models.Entities;
 using DAL.Repositories.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BLL.Services
 {
     public class UsersService : IUsersService
     {
         private readonly IUsersRepository usersRepository;
-        private IConfiguration configuration;
+        private readonly IOptions<RabbitMqConnection> rabbitMqConnection;
         private readonly ILogger<UsersService> logger;
         private Sender sender;
 
-        public UsersService(IUsersRepository usersRepository, ILogger<UsersService> logger, IConfiguration configuration)
+        public UsersService(IUsersRepository usersRepository, ILogger<UsersService> logger, IOptions<RabbitMqConnection> rabbitMqConnection)
         {
             this.usersRepository = usersRepository;
             this.logger = logger;
-            this.configuration = configuration;
+            this.rabbitMqConnection = rabbitMqConnection;
         }
 
         public async Task Create(UserDto userDto)
@@ -49,7 +50,7 @@ namespace BLL.Services
             try
             {
                 string json = JsonSerializer.Serialize(user);
-                sender = new Sender(configuration);
+                sender = new Sender(rabbitMqConnection);
                 var response = sender.Call(json);
                 //user = JsonSerializer.Deserialize<User>(response);
             }

@@ -5,9 +5,11 @@ using System.IO;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
+using BLL.Infrastructure.Extensions;
 using BLL.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace BLL.Middlewares
@@ -15,12 +17,15 @@ namespace BLL.Middlewares
     public class TokenMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly IConfiguration configuration;
+        private readonly IOptions<AuthOptions> authOptions;
+        private readonly IOptions<UserSecrets> userSecretsFromConfig;
+       
 
-        public TokenMiddleware(RequestDelegate next, IConfiguration configuration)
+        public TokenMiddleware(RequestDelegate next, IOptions<AuthOptions> authOptions, IOptions<UserSecrets> userSecretsFromConfig)
         {
             this._next = next;
-            this.configuration = configuration;
+            this.authOptions = authOptions;
+            this.userSecretsFromConfig = userSecretsFromConfig;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -41,13 +46,20 @@ namespace BLL.Middlewares
                     if (body.ToLower().Contains("username") && body.ToLower().Contains("password"))
                     {
                         var userSecrets = JsonSerializer.Deserialize<UserSecrets>(body);
-                        var identity = GetIdentity(userSecrets.Username, userSecrets.Password);
-                        if (identity == null)
+                        var userConfig = GetUserSecretsFromConfig();
+                        var secretsIsValid = SecretsIsValid(userSecrets, userConfig);
+                        if (!secretsIsValid)
                         {
                             context.Response.StatusCode = StatusCodes.Status403Forbidden;
                             await context.Response.WriteAsync("Invalid username or password.");
                         }
 
+                        var identity = GetIdentity(userSecrets, userConfig);
+                        if (identity == null)
+                        {
+                            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            await context.Response.WriteAsync("Invalid username or password.");
+                        }
 
                         var response = new UserSecretsResponse()
                         {
@@ -82,17 +94,29 @@ namespace BLL.Middlewares
             }
         }
 
+        private bool SecretsIsValid(UserSecrets userSecrets, UserSecrets userConfig)
+        {
+            if (!String.IsNullOrWhiteSpace(userSecrets.Username)
+                 && !String.IsNullOrWhiteSpace(userSecrets.Password)
+                 && !String.IsNullOrWhiteSpace(userConfig.Username)
+                 && !String.IsNullOrWhiteSpace(userConfig.Password))
+                return true;
+            else return false;
+        }
+
         private bool IsValid(string headerToken)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = AuthOptions.GetSymmetricSecurityKey();
+            var key = authOptions.Value.GetSymmetricSecurityKey();
+            //var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(AuthOptions.ke));//AuthOptions.GetSymmetricSecurityKey();
+
             try
             {
                 tokenHandler.ValidateToken(headerToken, new TokenValidationParameters()
                 {
                     IssuerSigningKey = key,
-                    ValidAudience = AuthOptions.AUDIENCE,
-                    ValidIssuer = AuthOptions.ISSUER,
+                    ValidAudience = authOptions.Value.AUDIENCE,
+                    ValidIssuer = authOptions.Value.ISSUER,
                     ValidateLifetime = true,
                     ValidateAudience = true,
                     ValidateIssuer = true,
@@ -112,44 +136,44 @@ namespace BLL.Middlewares
             }
         }
 
-        private static string GenerateJwt(ClaimsIdentity identity)
+        private string GenerateJwt(ClaimsIdentity identity)
         {
             var now = DateTime.UtcNow;
             var jwt = new JwtSecurityToken(
-                    issuer: AuthOptions.ISSUER,
-                    audience: AuthOptions.AUDIENCE,
+                    issuer: authOptions.Value.ISSUER,
+                    audience: authOptions.Value.AUDIENCE,
                     notBefore: now,
                     claims: identity.Claims,
-                    expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(),
+                    expires: now.Add(TimeSpan.FromMinutes(authOptions.Value.LIFETIME)),
+                    signingCredentials: new SigningCredentials(authOptions.Value.GetSymmetricSecurityKey(),
                     SecurityAlgorithms.HmacSha256));
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
             return encodedJwt;
         }
 
-        private ClaimsIdentity GetIdentity(string username, string password)
+        private ClaimsIdentity GetIdentity(UserSecrets userSecrets, UserSecrets userConfig)
         {
-            UserSecrets user = new UserSecrets()
-            {
-                Username = configuration.GetSection("UserSecrets:Username").Value,
-                Password = configuration.GetSection("UserSecrets:Password").Value
-            };
-
-            if (user.Username == username && user.Password == password
-                && !String.IsNullOrWhiteSpace(user.Username)
-                && !String.IsNullOrWhiteSpace(user.Password))
+            if (userSecrets.Username == userConfig.Username && userSecrets.Password == userConfig.Password)
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, user.Username),
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, userSecrets.Username),
                 };
-                ClaimsIdentity claimsIdentity =
-                new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
-                    ClaimsIdentity.DefaultRoleClaimType);
-                return claimsIdentity;
+
+                return new ClaimsIdentity(claims, "Token",
+                    ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType); ;
             }
 
             return null;
+        }
+
+        private UserSecrets GetUserSecretsFromConfig()
+        {
+            return new UserSecrets()
+            {
+                Username = userSecretsFromConfig.Value.Username,
+                Password = userSecretsFromConfig.Value.Password
+            };
         }
     }
 }

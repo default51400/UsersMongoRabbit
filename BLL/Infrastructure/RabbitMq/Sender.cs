@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Text;
+using BLL.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -15,11 +17,11 @@ namespace BLL.Infrastructure.RabbitMq
         private readonly EventingBasicConsumer consumer;
         private readonly BlockingCollection<string> respQueue;
         private readonly IBasicProperties props;
-        private IConfiguration configuration;
+        private readonly IOptions<RabbitMqConnection> rabbitMqConnection;
 
-        public Sender(IConfiguration configuration)
+        public Sender(IOptions<RabbitMqConnection> rabbitMqConnection)
         {
-            this.configuration = configuration;
+            this.rabbitMqConnection = rabbitMqConnection;
             var factory = new ConnectionFactory();
             SetConfigurations(factory);
 
@@ -64,11 +66,10 @@ namespace BLL.Infrastructure.RabbitMq
 
         private void SetConfigurations(ConnectionFactory connectionFactory)
         {
-            connectionFactory.HostName = configuration.GetSection("RabbitMqConnection:HostName").Value;
-            connectionFactory.Port = Int32.TryParse(configuration.GetSection("RabbitMqConnection:Port").Value,
-                out int port) ? port : 5672;
-            connectionFactory.UserName = configuration.GetSection("RabbitMqConnection:Username")?.Value;
-            connectionFactory.Password = configuration.GetSection("RabbitMqConnection:Password")?.Value;
+            connectionFactory.HostName = rabbitMqConnection.Value.HostName;
+            connectionFactory.Port = rabbitMqConnection.Value.Port;
+            connectionFactory.UserName = rabbitMqConnection.Value.Username;
+            connectionFactory.Password = rabbitMqConnection.Value.Password;
         }
     }
 }

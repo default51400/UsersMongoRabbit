@@ -8,22 +8,33 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace UsersMongoRabbit
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<AuthOptions>(Configuration.GetSection("AuthOptions"));
+            services.Configure<UserSecrets>(Configuration.GetSection("UserSecrets"));
+            services.Configure<RabbitMqConnection>(Configuration.GetSection("RabbitMqConnection"));
+            services.Configure<MongoConnection>(Configuration.GetSection("MongoConnection"));
+            services.Configure<Settings>(options =>
+            {
+                options.ConnectionString = Configuration.GetSection("MongoConnection:ConnectionString").Value;
+                options.Database = Configuration.GetSection("MongoConnection:Database").Value;
+            });
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                       .AddJwtBearer(options =>
                       {
@@ -31,24 +42,19 @@ namespace UsersMongoRabbit
                           options.TokenValidationParameters = new TokenValidationParameters
                           {
                               ValidateIssuer = true,
-                              ValidIssuer = AuthOptions.ISSUER,
+                              ValidIssuer = Configuration.Get<AuthOptions>().ISSUER,
                               ValidateAudience = true,
-                              ValidAudience = AuthOptions.AUDIENCE,
+                              ValidAudience = Configuration.Get<AuthOptions>().AUDIENCE,
                               ValidateLifetime = true,
-                              IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
+                              IssuerSigningKey = Configuration.Get<AuthOptions>().GetSymmetricSecurityKey(),
                               ValidateIssuerSigningKey = true,
                           };
                       });
+
             services.AddControllers();
-
-            services.Configure<Settings>(options =>
-            {
-                options.ConnectionString = Configuration.GetSection("MongoConnection:ConnectionString").Value;
-                options.Database = Configuration.GetSection("MongoConnection:Database").Value;
-            });
-
             services.CustomConfigureServices();
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

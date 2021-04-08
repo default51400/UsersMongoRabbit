@@ -7,7 +7,7 @@ using BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace UserMongoRabbit.Controllers
+namespace UsersMongoRabbit.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

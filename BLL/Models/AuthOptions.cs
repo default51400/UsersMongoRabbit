@@ -5,13 +5,9 @@ namespace BLL.Models
 {
     public class AuthOptions
     {
-        public const string ISSUER = "MyAuthServer";
-        public const string AUDIENCE = "MyAuthClient";
-        const string KEY = "mysupersecret_secretkey!123";
-        public const int LIFETIME = 1;
-        public static SymmetricSecurityKey GetSymmetricSecurityKey()
-        {
-            return new SymmetricSecurityKey(Encoding.ASCII.GetBytes(KEY));
-        }
+        public string ISSUER { get; set; } = "MyAuthServer";
+        public string AUDIENCE { get; set; } = "MyAuthClient";
+        public string KEY { get; set; } = "mysupersecret_secretkey!123";
+        public int LIFETIME { get; set; } = 1;
     }
 }

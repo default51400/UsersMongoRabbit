@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using BLL.Models;
 using DAL.Models.Entities;
 using DAL.Repositories.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -18,14 +19,13 @@ namespace BLL.Infrastructure.RabbitMq
         private readonly ILogger logger;
         private IConnection connection;
         private IModel channel;
-
-        private IConfiguration configuration;
         private IUsersRepository db;
         private ConnectionFactory factory;
+        private readonly RabbitMqConnection rabbitMqConnection;
 
-        public ReceiverService(IConfiguration configuration, IUsersRepository usersRepository, ILoggerFactory loggerFactory)
+        public ReceiverService(RabbitMqConnection rabbitMqConnection, IUsersRepository usersRepository, ILoggerFactory loggerFactory)
         {
-            this.configuration = configuration;
+            this.rabbitMqConnection = rabbitMqConnection;
             db = usersRepository;
             logger = loggerFactory.CreateLogger(typeof(ReceiverService));
             factory = new ConnectionFactory();
@@ -99,11 +99,10 @@ namespace BLL.Infrastructure.RabbitMq
 
         private void SetConfigurations(ConnectionFactory connectionFactory)
         {
-            connectionFactory.HostName = configuration.GetSection("RabbitMqConnection:HostName").Value;
-            connectionFactory.Port = Int32.TryParse(configuration.GetSection("RabbitMqConnection:Port").Value,
-                out int port) ? port : 5672;
-            connectionFactory.UserName = configuration.GetSection("RabbitMqConnection:Username")?.Value;
-            connectionFactory.Password = configuration.GetSection("RabbitMqConnection:Password")?.Value;
+            connectionFactory.HostName = rabbitMqConnection.HostName;
+            connectionFactory.Port = rabbitMqConnection.Port;
+            connectionFactory.UserName = rabbitMqConnection.Username;
+            connectionFactory.Password = rabbitMqConnection.Password;
         }
 
         private void OnConsumerConsumerCancelled(object sender, ConsumerEventArgs e) { }
